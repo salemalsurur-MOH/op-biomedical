@@ -1,7 +1,5 @@
 // ============================================
 // لوحة الإنتاجية v2 - إدارة الصيانة الطبية
-// Version: 2.1.0 - Delete Mode Feature
-// Updated: 2026-04-27 20:30 UTC
 // ============================================
 
 const STORAGE_KEY = 'med_maint_files_v2';
@@ -44,8 +42,6 @@ let view = 'grid';
 let currentFilter = 'all';
 let currentSearch = '';
 let editingId = null;
-let deleteMode = false;
-let selectedForDelete = [];
 
 function load(key, def) {
   try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : def; }
@@ -54,6 +50,9 @@ function load(key, def) {
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(files));
   localStorage.setItem(PINS_KEY, JSON.stringify(pins));
+  if (window.firebaseSync && window.firebaseSync.ready) {
+    window.firebaseSync.pushAll({ files, pins, categories });
+  }
 }
 
 // ===== Type meta =====
@@ -88,6 +87,9 @@ function loadCategories() {
 }
 function saveCategories() {
   localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+  if (window.firebaseSync && window.firebaseSync.ready) {
+    window.firebaseSync.pushAll({ files, pins, categories });
+  }
 }
 
 let categories = loadCategories();
@@ -237,12 +239,7 @@ function renderCard(f) {
   const t = TYPE[f.type] || TYPE.doc;
   const has = !!(f.url && f.url.trim());
   const pinned = pins.includes(f.id);
-  const isSelected = selectedForDelete.includes(f.id);
-  const cardClick = deleteMode ? `onclick="event.stopPropagation();toggleSelectForDelete('${f.id}')"` : `onclick="openFile('${f.id}')"`;
-  return `<div class="card ${!has?'no-link':''} ${isSelected?'selected-for-delete':''}" ${cardClick} style="${isSelected?'background:var(--warning);opacity:0.7;':''}" title="${deleteMode?'اختر لحذف':''}">
-    ${deleteMode ? `<div style="position:absolute;top:6px;left:6px;width:20px;height:20px;border:2px solid var(--danger);border-radius:4px;background:${isSelected?'var(--danger)':'white'};display:flex;align-items:center;justify-content:center;">
-      ${isSelected?'<svg fill="white" stroke="none" viewBox="0 0 24 24" style="width:14px;height:14px;"><path d="M5 13l4 4L19 7"/></svg>':''}
-    </div>` : ''}
+  return `<div class="card ${!has?'no-link':''}" onclick="openFile('${f.id}')">
     <div class="row-icon ${t.cls}" style="width:48px;height:48px;border-radius:11px;">${t.icon}</div>
     <div class="card-body">
       <div class="card-title">${esc(f.title)}</div>
@@ -254,11 +251,9 @@ function renderCard(f) {
         }).join('')}
       </div>
     </div>
-    ${!deleteMode ? `<div style="position:absolute;top:6px;right:6px;display:flex;gap:4px;">
-      <button class="row-pin ${pinned?'pinned':''}" onclick="event.stopPropagation();togglePin('${f.id}')" title="${pinned?'إلغاء التثبيت':'تثبيت'}">
-        <svg fill="${pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-      </button>
-    </div>` : ''}
+    <button class="row-pin ${pinned?'pinned':''}" onclick="event.stopPropagation();togglePin('${f.id}')" style="position:absolute;top:6px;left:6px;">
+      <svg fill="${pinned?'currentColor':'none'}" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    </button>
   </div>`;
 }
 
@@ -538,64 +533,34 @@ function removeCategory(id) {
   toast('حُذفت المجموعة', 'success');
 }
 
-// ===== Delete Mode =====
-function toggleDeleteMode() {
-  const btn = document.getElementById('btn-delete-mode');
-
-  if (deleteMode && selectedForDelete.length > 0) {
-    // If in delete mode and items selected, delete them
-    const userConfirmed = confirm(`تحذير!\nهل أنت متأكد فعلاً من حذف ${selectedForDelete.length} عنصر؟\n\nهذا لا يمكن التراجع عنه!`);
-    if (!userConfirmed) {
-      render();
-      return;
-    }
-    const deletedCount = selectedForDelete.length;
-    files = files.filter(f => !selectedForDelete.includes(f.id));
-    selectedForDelete.forEach(id => {
-      pins = pins.filter(p => p !== id);
-    });
-    save();
-    deleteMode = false;
-    selectedForDelete = [];
-    toast(`✓ تم حذف ${deletedCount} عنصر بنجاح`, 'success');
-  } else if (deleteMode && selectedForDelete.length === 0) {
-    // If in delete mode but nothing selected, exit delete mode
-    deleteMode = false;
-    toast('تم إلغاء وضع الحذف', 'info');
-  } else {
-    // Enter delete mode
-    deleteMode = true;
-    toast('اختر العناصر المراد حذفها ثم اضغط الزر الأحمر', 'info');
-  }
-
-  if (deleteMode) {
-    btn.style.background = 'var(--danger)';
-    btn.style.color = 'white';
-    btn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg><span>إغلاق</span>';
-  } else {
-    btn.style.background = '';
-    btn.style.color = '';
-    btn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg><span>إزالة</span>';
-  }
-  render();
-}
-
-function toggleSelectForDelete(id) {
-  if (selectedForDelete.includes(id)) {
-    selectedForDelete = selectedForDelete.filter(x => x !== id);
-  } else {
-    selectedForDelete.push(id);
-  }
-
-  const btn = document.getElementById('btn-delete-mode');
-  if (selectedForDelete.length > 0) {
-    btn.innerHTML = `<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg><span>حذف ${selectedForDelete.length}</span>`;
-  } else {
-    btn.innerHTML = '<svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg><span>حذف المحددة</span>';
-  }
-
-  render();
-}
+// ===== Firebase sync hooks =====
+// firebase-sync.js calls these to push our local state up and to apply
+// remote changes coming in from other devices.
+window.appHooks = {
+  getState: () => ({ files, pins, categories }),
+  getFiles: () => files,
+  getPins: () => pins,
+  getCategories: () => categories,
+  setFiles: (arr) => {
+    if (!Array.isArray(arr)) return;
+    files = arr;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(files));
+    render();
+  },
+  setPins: (arr) => {
+    if (!Array.isArray(arr)) return;
+    pins = arr;
+    localStorage.setItem(PINS_KEY, JSON.stringify(pins));
+    render();
+  },
+  setCategories: (arr) => {
+    if (!Array.isArray(arr) || arr.length === 0) return;
+    categories = arr;
+    localStorage.setItem(CAT_KEY, JSON.stringify(categories));
+    renderCategoryOptions();
+    render();
+  },
+};
 
 // Boot
 render();
