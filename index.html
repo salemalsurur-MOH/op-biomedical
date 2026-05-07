@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>لوحة الصيانة الطبية — نسخة الإنتاجية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<template id="__bundler_thumbnail" data-bg-color="#0E5A8A">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#0E5A8A"/>
+    <g transform="translate(600 360)" fill="#fff">
+      <rect x="-280" y="-120" width="560" height="50" rx="10" opacity="0.85"/>
+      <rect x="-280" y="-50" width="260" height="32" rx="6" opacity="0.65"/>
+      <rect x="-10" y="-50" width="290" height="32" rx="6" opacity="0.4"/>
+      <rect x="-280" y="10" width="560" height="32" rx="6" opacity="0.4"/>
+      <rect x="-280" y="55" width="560" height="32" rx="6" opacity="0.4"/>
+    </g>
+  </svg>
+</template>
+<style>
+  :root {
+    --primary: #0E5A8A;
+    --primary-dark: #0a4269;
+    --accent: #2AA8D8;
+    --accent-soft: #e6f4fb;
+    --bg: #fafbfc;
+    --panel: #ffffff;
+    --border: #e5e9ef;
+    --border-strong: #cfd8e3;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-faint: #94a3b8;
+    --success: #16a34a;
+    --warning: #d97706;
+    --danger: #dc2626;
+    --radius: 10px;
+    --radius-sm: 7px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: 'Cairo', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.55;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  button, input, select, textarea { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ===== TOP BAR (thin, productive) ===== */
+  .topbar {
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .topbar-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .brand img { height: 68px; width: auto; }
+  .brand-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--primary);
+    line-height: 1.2;
+  }
+  .brand-sub { font-size: 14px; color: var(--text-muted); }
+
+  /* Search — hero element */
+  .search-wrap {
+    flex: 1;
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .search-wrap svg.search-icon {
+    position: absolute; right: 12px; top: 50%;
+    transform: translateY(-50%);
+    width: 16px; height: 16px; color: var(--text-faint);
+    pointer-events: none;
+  }
+  .search-input {
+    width: 100%;
+    padding: 9px 38px 9px 54px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    font-size: 14px;
+    outline: none;
+    transition: border-color .15s, background .15s;
+  }
+  .search-input:focus {
+    border-color: var(--primary);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(14,90,138,.1);
+  }
+  .search-kbd {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'Outfit', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 2px 7px;
+    pointer-events: none;
+  }
+
+  .topbar-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    width: 34px; height: 34px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all .15s;
+  }
+  .icon-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--accent-soft); }
+  .icon-btn svg { width: 16px; height: 16px; }
+  .btn-add {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn-add:hover { background: var(--primary-dark); }
+  .btn-add svg { width: 15px; height: 15px; }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 18px 20px 40px;
+  }
+
+  /* ===== QUICK ACCESS ===== */
+  .qa-section {
+    margin-bottom: 22px;
+  }
+  .qa-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+  .qa-header h2 {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .qa-header h2::before {
+    content: '';
+    width: 4px; height: 14px;
+    background: var(--primary);
+    border-radius: 2px;
+  }
+  .qa-hint {
+    font-size: 11.5px;
+    color: var(--text-faint);
+  }
+  .qa-hint kbd {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: 'Outfit', monospace;
+    font-size: 10.5px;
+    color: var(--text-muted);
+  }
+
+  .qa-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .qa-tile {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all .12s;
+    position: relative;
+    min-height: 92px;
+  }
+  .qa-tile:hover {
+    border-color: var(--primary);
+    background: var(--accent-soft);
+  }
+  .qa-tile .qa-num {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    font-family: 'Outfit', monospace;
+    font-size: 11px;
+    color: var(--text-faint);
+    background: #f1f5f9;
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-weight: 600;
+  }
+  .qa-tile .qa-icon {
+    width: 50px; height: 50px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 700;
+  }
+  .qa-tile .qa-icon svg { width: 26px; height: 26px; }
+  .qa-tile .qa-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .qa-empty {
+    padding: 16px;
+    text-align: center;
+    border: 1.5px dashed var(--border);
+    border-radius: var(--radius);
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+  .qa-empty strong { color: var(--text-muted); }
+
+  /* ===== FILTER TABS ===== */
+  .tabs-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    padding: 9px 14px;
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all .15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    margin-bottom: -1px;
+  }
+  .tab:hover { color: var(--primary); }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tab-count {
+    background: #f1f5f9;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    min-width: 18px;
+    text-align: center;
+    font-family: 'Outfit', monospace;
+  }
+  .tab.active .tab-count { background: var(--accent-soft); color: var(--primary); }
+
+  .view-toggle {
+    display: flex;
+    gap: 2px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 2px;
+    flex-shrink: 0;
+  }
+  .view-toggle button {
+    padding: 5px 9px;
+    border: none;
+    background: transparent;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .view-toggle button.active { background: var(--accent-soft); color: var(--primary); }
+  .view-toggle svg { width: 14px; height: 14px; }
+
+  /* ===== GROUP ===== */
+  .group { margin-bottom: 18px; }
+  .group-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+  .group-header .count {
+    background: #f1f5f9;
+    color: var(--text-muted);
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 999px;
+    font-family: 'Outfit', monospace;
+  }
+
+  /* ===== COMPACT ROW ITEM (list view — default) ===== */
+  .rows {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .row-item {
+    display: grid;
+    grid-template-columns: 34px 1fr auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background .1s;
+    cursor: pointer;
+  }
+  .row-item:last-child { border-bottom: none; }
+  .row-item:hover { background: var(--accent-soft); }
+  .row-item.no-link { opacity: 0.75; }
+  .row-item.no-link:hover { background: #fef3c7; }
+
+  .row-icon {
+    width: 32px; height: 32px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .row-icon svg { width: 16px; height: 16px; }
+  .row-icon .initials {
+    font-weight: 700;
+    font-size: 12px;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.3px;
+  }
+
+  .row-main {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .row-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.35;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .row-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+  }
+  .row-type {
+    font-weight: 600;
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 4px;
+  }
+  .row-tags { display: flex; gap: 4px; }
+  .row-tag {
+    font-size: 10.5px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: #f1f5f9;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .row-tag.urgent { background: #fee2e2; color: #b91c1c; }
+  .row-tag.weekly { background: #e0f2fe; color: #0369a1; }
+  .row-tag.report { background: #f3e8ff; color: #7c3aed; }
+
+  .row-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity .12s;
+  }
+  .row-item:hover .row-actions { opacity: 1; }
+  .row-item .row-pin { opacity: 1; }
+  .row-action {
+    width: 28px; height: 28px;
+    border: 1px solid var(--border);
+    background: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all .12s;
+  }
+  .row-action:hover { border-color: var(--primary); color: var(--primary); }
+  .row-action.danger:hover { border-color: #fca5a5; color: var(--danger); }
+  .row-action svg { width: 13px; height: 13px; }
+  .row-pin {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-faint);
+    transition: color .12s;
+  }
+  .row-pin:hover { color: var(--warning); }
+  .row-pin.pinned { color: var(--warning); }
+  .row-pin svg { width: 15px; height: 15px; }
+  .row-pin.pinned svg { fill: currentColor; }
+
+  /* ===== GRID VIEW ===== */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 14px;
+  }
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    cursor: pointer;
+    transition: all .12s;
+    position: relative;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    min-height: 96px;
+  }
+  .card:hover { border-color: var(--primary); background: var(--accent-soft); }
+  .card .row-icon svg { width: 24px; height: 24px; }
+  .card.no-link { opacity: 0.78; }
+  .card-body { flex: 1; min-width: 0; }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.45;
+    margin-bottom: 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .card-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    flex-wrap: wrap;
+  }
+  .card-actions {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity .12s;
+  }
+  .card:hover .card-actions { opacity: 1; }
+
+  /* ===== Type color map (small and subtle) ===== */
+  .t-form   { background: #f3eeff; color: #6d28d9; }
+  .t-sheet  { background: #dcfce7; color: #15803d; }
+  .t-kpi    { background: #e0f2fe; color: #0369a1; }
+  .t-doc,
+  .t-gdoc   { background: #dbeafe; color: #1d4ed8; }
+  .t-pdf    { background: #fee2e2; color: #b91c1c; }
+  .t-website{ background: #cffafe; color: #0e7490; }
+
+  /* ===== EMPTY ===== */
+  .empty {
+    padding: 48px 20px;
+    text-align: center;
+    color: var(--text-faint);
+  }
+  .empty svg { width: 40px; height: 40px; margin-bottom: 10px; opacity: 0.5; }
+  .empty-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 4px; }
+  .empty-hint { font-size: 13px; }
+
+  /* ===== MODAL ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.5);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: #fff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-head h3 { font-size: 15px; font-weight: 700; }
+  .modal-close {
+    width: 28px; height: 28px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 5px;
+    color: var(--text-muted);
+    font-size: 20px;
+  }
+  .modal-close:hover { background: #f1f5f9; color: var(--danger); }
+  .modal-body { padding: 18px 20px; }
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 8px 11px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 13.5px;
+    outline: none;
+    background: #fff;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(14,90,138,.1);
+  }
+  .field textarea { min-height: 60px; resize: vertical; font-family: inherit; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tag-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag-pick label {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+  }
+  .tag-pick input { display: none; }
+  .tag-pick label:has(input:checked) { background: var(--accent-soft); border-color: var(--primary); color: var(--primary); }
+
+  .modal-foot {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .btn-ghost {
+    padding: 7px 14px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .btn-ghost:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-primary {
+    padding: 7px 16px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  /* ===== CATEGORY MANAGER ===== */
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font: inherit;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0 6px;
+    margin-inline-start: 6px;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .link-btn:hover { color: var(--primary-dark); }
+  .cat-add-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .cat-add-row input {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font: inherit;
+    font-size: 13.5px;
+    background: #fff;
+  }
+  .cat-add-row input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(14,90,138,.12);
+  }
+  .cat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 360px;
+    overflow-y: auto;
+    padding: 2px;
+  }
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px 8px;
+  }
+  .cat-row:hover { border-color: var(--border-strong); }
+  .cat-handle {
+    background: none;
+    border: none;
+    color: var(--text-faint);
+    cursor: grab;
+    font-size: 14px;
+    padding: 4px 2px;
+    line-height: 1;
+    user-select: none;
+  }
+  .cat-name {
+    flex: 1;
+    border: 1px solid transparent;
+    background: transparent;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    padding: 6px 8px;
+    border-radius: 6px;
+  }
+  .cat-name:hover { background: #f8fafc; }
+  .cat-name:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(14,90,138,.12);
+  }
+  .cat-count {
+    font-family: 'Outfit', monospace;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    background: #f1f5f9;
+    border-radius: 999px;
+    padding: 2px 9px;
+    min-width: 22px;
+    text-align: center;
+    font-weight: 600;
+  }
+  .cat-del {
+    width: 30px; height: 30px;
+    border: 1px solid transparent;
+    background: transparent;
+    border-radius: 6px;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .cat-del svg { width: 15px; height: 15px; }
+  .cat-del:hover {
+    color: var(--danger);
+    background: #fef2f2;
+    border-color: #fecaca;
+  }
+
+  /* ===== HELP / SHORTCUTS PANEL ===== */
+  .help-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.4);
+    z-index: 150;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .help-backdrop.open { display: flex; }
+  .help {
+    background: #fff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 440px;
+    padding: 18px 22px;
+  }
+  .help h3 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .help h3 button {
+    border: none;
+    background: none;
+    font-size: 18px;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .help dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; }
+  .help dt {
+    display: flex;
+    gap: 4px;
+  }
+  .help dt kbd {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: 'Outfit', monospace;
+    font-size: 11.5px;
+    min-width: 22px;
+    text-align: center;
+  }
+  .help dd { font-size: 12.5px; color: var(--text-muted); padding-top: 3px; }
+
+  /* ===== TOAST ===== */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--text);
+    color: #fff;
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0,0,0,.2);
+    z-index: 300;
+    opacity: 0;
+    transition: all .25s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.warn { background: var(--warning); }
+
+  /* ===== FOOTER ===== */
+  .foot {
+    max-width: 1400px;
+    margin: 24px auto 0;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.5px;
+    color: var(--text-faint);
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .foot strong { color: var(--text-muted); font-weight: 600; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 768px) {
+    .topbar-inner { flex-wrap: wrap; gap: 10px; }
+    .search-wrap { order: 3; flex-basis: 100%; max-width: 100%; }
+    .brand img { height: 54px; }
+    .brand-name { font-size: 14px; }
+    .btn-add span { display: none; }
+    .btn-add { padding: 8px 10px; }
+    .qa-grid { grid-template-columns: repeat(2, 1fr); }
+    .row-item { grid-template-columns: 34px 1fr auto; }
+    .row-actions { display: none; }
+    .row-item:hover .row-actions { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="assets/logo.png?v=2" alt="شعار التجمع">
+      <div>
+        <div class="brand-name">إدارة الصيانة الطبية</div>
+        <div class="brand-sub">تجمع حفر الباطن الصحي</div>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="text" class="search-input" id="search" placeholder="ابحث عن ملف، موقع، أو وسم...">
+      <span class="search-kbd">/</span>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="openHelp()" title="الاختصارات (?)">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/></svg>
+      </button>
+      <button class="icon-btn" onclick="exportData()" title="تصدير نسخة احتياطية">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+      </button>
+      <button class="icon-btn" onclick="document.getElementById('import-file').click()" title="استيراد">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+      </button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn-add" onclick="openAddModal()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        <span>إضافة</span>
+      </button>
+      <button class="btn-delete" id="btn-delete-mode" onclick="toggleDeleteMode()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m5 0V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2"/></svg>
+        <span>إزالة</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="main">
+
+  <!-- QUICK ACCESS -->
+  <section class="qa-section">
+    <div class="qa-header">
+      <h2>الوصول السريع</h2>
+      <div class="qa-hint">اضغط <kbd>1</kbd>–<kbd>9</kbd> للفتح المباشر</div>
+    </div>
+    <div id="qa-grid" class="qa-grid"></div>
+  </section>
+
+  <!-- TABS + VIEW TOGGLE -->
+  <div class="tabs-row">
+    <div class="tabs" id="tabs">
+      <button class="tab active" data-filter="all">الكل <span class="tab-count" data-count="all">0</span></button>
+      <button class="tab" data-filter="form">نماذج <span class="tab-count" data-count="form">0</span></button>
+      <button class="tab" data-filter="sheet">جداول <span class="tab-count" data-count="sheet">0</span></button>
+      <button class="tab" data-filter="kpi">KPI <span class="tab-count" data-count="kpi">0</span></button>
+      <button class="tab" data-filter="gdoc">مستندات <span class="tab-count" data-count="gdoc">0</span></button>
+      <button class="tab" data-filter="pdf">PDF <span class="tab-count" data-count="pdf">0</span></button>
+      <button class="tab" data-filter="website">مواقع <span class="tab-count" data-count="website">0</span></button>
+    </div>
+
+  </div>
+
+  <div id="results"></div>
+</main>
+
+<footer class="foot">
+  <div>تصميم: <strong>م. سالم بن عوض السرور</strong> • إدارة الصيانة الطبية</div>
+  <div>تجمع حفر الباطن الصحي © 2026</div>
+</footer>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-backdrop" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">إضافة ملف</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field">
+        <label>الاسم *</label>
+        <input type="text" id="f-title" placeholder="مثال: متابعة تواقيع الخطابات">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>النوع</label>
+          <select id="f-type">
+            <option value="form">نموذج</option>
+            <option value="sheet">جدول بيانات</option>
+            <option value="kpi">KPI</option>
+            <option value="gdoc">مستند Google</option>
+            <option value="pdf">PDF</option>
+            <option value="website">موقع إلكتروني</option>
+            <option value="doc">مستند آخر</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>المجموعة <button type="button" class="link-btn" onclick="openCategoryManager()">إدارة المجموعات</button></label>
+          <select id="f-category">
+            <option value="core">أساسي</option>
+            <option value="monitoring">متابعة وتقييم</option>
+            <option value="reports">تقارير</option>
+            <option value="contracts">عقود</option>
+            <option value="documents">مستندات</option>
+            <option value="websites">مواقع</option>
+            <option value="other">أخرى</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>الرابط</label>
+        <input type="url" id="f-url" placeholder="https://...">
+      </div>
+      <div class="field">
+        <label>الوسوم</label>
+        <div class="tag-pick">
+          <label><input type="checkbox" value="urgent"> عاجل</label>
+          <label><input type="checkbox" value="weekly"> أسبوعي</label>
+          <label><input type="checkbox" value="monthly"> شهري</label>
+          <label><input type="checkbox" value="report"> تقرير</label>
+          <label><input type="checkbox" value="daily"> يومي</label>
+        </div>
+      </div>
+      <div class="field">
+        <label>وصف مختصر (اختياري)</label>
+        <textarea id="f-desc" placeholder="سطر واحد يوضح الملف"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeModal()">إلغاء</button>
+      <button class="btn-primary" onclick="saveFile()">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP -->
+<div class="help-backdrop" id="help" onclick="if(event.target.id==='help')closeHelp()">
+  <div class="help">
+    <h3>اختصارات لوحة المفاتيح <button onclick="closeHelp()">×</button></h3>
+    <dl>
+      <dt><kbd>/</kbd></dt><dd>التركيز على شريط البحث</dd>
+      <dt><kbd>1</kbd>–<kbd>9</kbd></dt><dd>فتح عنصر من الوصول السريع مباشرة</dd>
+      <dt><kbd>N</kbd></dt><dd>إضافة ملف جديد</dd>
+      <dt><kbd>Esc</kbd></dt><dd>إغلاق أي نافذة</dd>
+      <dt><kbd>?</kbd></dt><dd>إظهار هذه النافذة</dd>
+    </dl>
+    <div style="margin-top:14px; padding:10px; background:#f8fafc; border-radius:7px; font-size:12px; color:var(--text-muted); line-height:1.7;">
+      <strong style="color:var(--text)">💡 نصيحة:</strong> انقر على ⭐ بجانب أي ملف لتثبيته في قسم الوصول السريع. يمكنك تثبيت حتى 9 عناصر لفتحها برقم مباشرة.
+    </div>
+  </div>
+</div>
+
+<!-- CATEGORY MANAGEMENT MODAL -->
+<div class="modal-backdrop" id="cat-modal" onclick="if(event.target.id==='cat-modal')closeCategoryManager()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>إدارة المجموعات</h3>
+      <button class="modal-close" onclick="closeCategoryManager()">×</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12.5px;color:var(--text-muted);margin:0 0 12px;">
+        أضف، عدّل أو احذف مجموعات تصنيف الملفات. الترتيب هنا هو ترتيب الظهور في اللوحة.
+      </p>
+      <div class="cat-add-row">
+        <input type="text" id="new-cat-input" placeholder="اسم المجموعة الجديدة..."
+               onkeydown="if(event.key==='Enter'){event.preventDefault();addCategory();}">
+        <button class="btn-primary" onclick="addCategory()">+ إضافة</button>
+      </div>
+      <div id="cat-list" class="cat-list"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeCategoryManager()">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="app-v2.js?v=5"></script>
+</body>
+</html>
