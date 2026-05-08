@@ -66,7 +66,7 @@ function setStatus(state, label, errMsg) {
 }
 
 // Suppress next-snapshot echo of our own write (debounce per slice)
-const ownWriteTokens = { files: 0, pins: 0, categories: 0 };
+const ownWriteTokens = { files: 0, pins: 0, categories: 0, tasks: 0 };
 
 // ---- public push ----
 // Called by app-v2.js whenever the user changes data.
@@ -95,6 +95,20 @@ window.firebaseSync = {
     ownWriteTokens.files++;
     ownWriteTokens.pins++;
     ownWriteTokens.categories++;
+  },
+
+  pushTasks(tasks) {
+    if (!this.ready) return;
+    setStatus('syncing', 'جاري الحفظ…');
+    setDoc(doc(db, 'shared', 'tasks'), {
+      items: tasks, client: CLIENT_ID, updatedAt: serverTimestamp()
+    })
+    .then(() => setStatus('live', 'متزامن'))
+    .catch(err => {
+      console.error('Firestore tasks push failed:', err);
+      setStatus('offline', 'غير متصل', err && err.message ? err.message : String(err));
+    });
+    ownWriteTokens.tasks++;
   },
 };
 
@@ -132,12 +146,12 @@ function boot() {
 
   setStatus('connecting', 'جاري الاتصال…');
 
-  let needSeed = { files: false, pins: false, categories: false };
+  let needSeed = { files: false, pins: false, categories: false, tasks: false };
   let firstCount = 0;
 
   function onAnyFirst() {
     firstCount++;
-    if (firstCount < 3) return;
+    if (firstCount < 4) return;
     // All three first-snapshots received. Mark ready so future saves push.
     window.firebaseSync.ready = true;
     setStatus('live', 'متزامن');
@@ -145,6 +159,9 @@ function boot() {
     // devices have something to load.
     if (needSeed.files || needSeed.pins || needSeed.categories) {
       window.firebaseSync.pushAll(window.appHooks.getState());
+    }
+    if (needSeed.tasks && window.assistantHooks) {
+      window.firebaseSync.pushTasks(window.assistantHooks.getTasks());
     }
   }
 
@@ -183,6 +200,19 @@ function boot() {
       onAnyFirst();
     },
     items => window.appHooks.setCategories(items)
+  );
+
+  listen('tasks',
+    items => {
+      const local = window.assistantHooks ? window.assistantHooks.getTasks() : [];
+      if (items === null) {
+        if (local.length > 0) needSeed.tasks = true;
+      } else {
+        if (window.assistantHooks) window.assistantHooks.setTasks(items);
+      }
+      onAnyFirst();
+    },
+    items => { if (window.assistantHooks) window.assistantHooks.setTasks(items); }
   );
 
   // Fallback: if Firebase never responds within 4s (offline / blocked),
