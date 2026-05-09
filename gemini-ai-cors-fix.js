@@ -6,8 +6,8 @@
 class GeminiAI {
   constructor(apiKey) {
     this.apiKey = apiKey;
-    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-    // CORS proxy (لفترة مؤقتة فقط)
+this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+   إلى: this.baseUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';    // CORS proxy (لفترة مؤقتة فقط)
     this.proxyUrl = 'https://api.allorigins.win/raw?url=';
     this.initialized = !!apiKey;
   }
