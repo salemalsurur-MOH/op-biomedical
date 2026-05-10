@@ -29,27 +29,71 @@ function addDays(days) {
   return d.toISOString().slice(0,10);
 }
 
-// ===== AI parsing via Claude =====
-async function handleAssistantSubmit() {
-  const input = document.getElementById('asst-input');
-  const text = (input.value || '').trim();
-  if (!text || assistantBusy) return;
-  assistantBusy = true;
-  setAssistantStatus('thinking');
-  try {
-    const result = await parseCommand(text);
-    applyResult(result, text);
-    input.value = '';
-    autoSizeInput();
-  } catch (e) {
-    console.error(e);
-    asstToast('تعذّر فهم الأمر — حاول صياغته بشكل أوضح', 'warn');
-  } finally {
-    assistantBusy = false;
-    setAssistantStatus('idle');
-    renderTasks();
-  }
+// ===== Manual task creation =====
+function addTaskManual() {
+  const titleEl = document.getElementById('m-title');
+  const prEl = document.getElementById('m-priority');
+  const dlEl = document.getElementById('m-deadline');
+  const title = (titleEl.value || '').trim();
+  if (!title) { asstToast('اكتب عنوان المهمة', 'warn'); titleEl.focus(); return; }
+  const now = nowISO();
+  const t = {
+    id: tuid(),
+    title,
+    priority: ['high','medium','low'].includes(prEl.value) ? prEl.value : 'medium',
+    deadline: dlEl.value || null,
+    status: 'open',
+    archived: false,
+    createdAt: now,
+    updatedAt: now,
+    actions: []
+  };
+  tasks.unshift(t);
+  selectedTaskId = t.id;
+  saveTasks();
+  renderTasks();
+  asstToast('أُنشئت المهمة', 'success');
+  titleEl.value = '';
+  dlEl.value = '';
+  prEl.value = 'medium';
+  titleEl.focus();
 }
+
+// ===== Manual action input =====
+let actionTargetId = null;
+function openActionInput(targetId) {
+  const t = tasks.find(x => x.id === targetId && !x.archived);
+  if (!t) return;
+  actionTargetId = targetId;
+  document.getElementById('ai-target-label').textContent = t.title;
+  document.getElementById('ai-input').value = '';
+  document.getElementById('action-input-wrap').classList.add('open');
+  setTimeout(() => document.getElementById('ai-input').focus(), 50);
+}
+function closeActionInput() {
+  actionTargetId = null;
+  document.getElementById('action-input-wrap').classList.remove('open');
+}
+function submitActionInput() {
+  if (!actionTargetId) return closeActionInput();
+  const text = (document.getElementById('ai-input').value || '').trim();
+  if (!text) { asstToast('اكتب نص الإجراء', 'warn'); return; }
+  const t = tasks.find(x => x.id === actionTargetId);
+  if (!t) return closeActionInput();
+  const now = nowISO();
+  t.actions = t.actions || [];
+  t.actions.push({ id: tuid(), text, ts: now });
+  t.updatedAt = now;
+  expandedTasks.add(t.id);
+  selectedTaskId = t.id;
+  saveTasks();
+  renderTasks();
+  closeActionInput();
+  asstToast('أُضيف الإجراء', 'success');
+}
+
+// Stub kept so old chip-bound onclick keeps working
+async function handleAssistantSubmit() {}
 
 async function parseCommand(text) {
   const taskList = tasks
@@ -196,6 +240,49 @@ function renderTasks() {
   list.innerHTML = visible.map(renderTaskCard).join('');
 }
 
+// Extract a deadline date from action text (e.g., "يجب أن تنتهي بتاريخ ٢٠٢٦/٠٥/١٥",
+// "تنتهي في 15-5-2026", "موعد الانتهاء 2026-05-15", "خلال X أيام/يوم")
+function extractActionDeadline(actions) {
+  if (!actions || !actions.length) return null;
+  let found = null;
+  const triggers = /(يجب\s+أن\s+تنتهي|ينتهي|تنتهي|الانتهاء|موعد\s+الانتهاء|الموعد\s+النهائي|قبل\s+تاريخ|بحلول|خلال)/;
+  // Convert Arabic-Indic digits to ASCII
+  const normalize = s => String(s||'').replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+  for (const a of actions) {
+    const raw = normalize(a.text || '');
+    if (!triggers.test(raw)) continue;
+    // YYYY-MM-DD or YYYY/MM/DD
+    let m = raw.match(/(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/);
+    if (m) {
+      const iso = `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+      found = { iso, ts: a.ts };
+      continue;
+    }
+    // DD-MM-YYYY or DD/MM/YYYY
+    m = raw.match(/(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/);
+    if (m) {
+      const iso = `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+      found = { iso, ts: a.ts };
+      continue;
+    }
+    // "خلال N أيام/يوم"
+    m = raw.match(/خلال\s+(\d+)\s*(يوم|يومين|أيام|ايام)/);
+    if (m) {
+      const days = parseInt(m[1], 10);
+      const base = a.ts ? new Date(a.ts) : new Date();
+      base.setDate(base.getDate() + days);
+      found = { iso: base.toISOString().slice(0,10), ts: a.ts };
+      continue;
+    }
+    if (/خلال\s+يومين/.test(raw)) {
+      const base = a.ts ? new Date(a.ts) : new Date();
+      base.setDate(base.getDate() + 2);
+      found = { iso: base.toISOString().slice(0,10), ts: a.ts };
+    }
+  }
+  return found;
+}
+
 function renderTaskCard(t) {
   const isExp = expandedTasks.has(t.id);
   const isSel = selectedTaskId === t.id;
@@ -206,10 +293,24 @@ function renderTaskCard(t) {
   const actionsCount = (t.actions || []).length;
   const prClass = ['high','medium','low'].includes(t.priority) ? t.priority : 'medium';
   const prLabel = { high: '🔥 عاجل', medium: '● متوسط', low: '○ منخفض' }[prClass];
+  const isUrgent = prClass === 'high' && !t.archived;
+
+  // Extract deadline mentioned in actions
+  const actionDl = extractActionDeadline(t.actions);
+  const actionOverdue = !t.archived && actionDl && actionDl.iso < today;
+  const actionDueSoon = !t.archived && actionDl && actionDl.iso >= today &&
+    (new Date(actionDl.iso) - new Date(today)) / 86400000 <= 2;
+
   const deadlineHtml = t.deadline
     ? `<span class="t-meta-item ${overdue?'overdue':dueSoon?'duesoon':''}">
          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
          ${formatDate(t.deadline)}${overdue?' • متأخر':dueSoon?' • قريب':''}
+       </span>`
+    : '';
+  const actionDlHtml = actionDl
+    ? `<span class="t-action-dl ${actionOverdue?'overdue':actionDueSoon?'duesoon':''}" title="موعد الانتهاء المذكور في الإجراءات">
+         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:12px;height:12px"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+         موعد الانتهاء: ${formatDate(actionDl.iso)}${actionOverdue?' • متأخر':actionDueSoon?' • قريب':''}
        </span>`
     : '';
   const lastAction = (t.actions || []).slice(-1)[0];
@@ -223,7 +324,14 @@ function renderTaskCard(t) {
       </div>
     </div>`).join('');
 
-  return `<div class="t-card ${isSel?'selected':''} ${t.archived?'archived':''}" data-id="${t.id}" onclick="selectTask('${t.id}')">
+  const cardClasses = [
+    isSel ? 'selected' : '',
+    t.archived ? 'archived' : '',
+    isUrgent ? 'urgent' : '',
+    actionOverdue ? 'action-overdue' : ''
+  ].filter(Boolean).join(' ');
+
+  return `<div class="t-card ${cardClasses}" data-id="${t.id}" onclick="selectTask('${t.id}')">
     <div class="t-row">
       <button class="t-check ${t.status==='done'?'checked':''}" onclick="event.stopPropagation();toggleTaskDone('${t.id}')" title="${t.archived?'استرجاع':'إنهاء المهمة'}">
         ${t.status==='done' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
@@ -241,6 +349,7 @@ function renderTaskCard(t) {
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             ${actionsCount} إجراء
           </span>` : ''}
+          ${actionDlHtml}
         </div>
         ${lastAction && !isExp ? `<div class="t-last-action">${escAsst(lastAction.text)}</div>` : ''}
       </div>
@@ -419,17 +528,8 @@ function printTasks() {
 }
 
 function pickTaskForAction(id) {
-  const t = tasks.find(x => x.id === id);
-  if (!t) return;
-  selectedTaskId = id;
   closeTaskPicker();
-  renderTasks();
-  const el = document.getElementById('asst-input');
-  el.value = `اضف اجراء على مهمة "${t.title}": `;
-  el.focus();
-  autoSizeInput();
-  const len = el.value.length;
-  el.setSelectionRange(len, len);
+  openActionInput(id);
 }
 
 // ===== utils =====
@@ -483,17 +583,13 @@ window.assistantHooks = {
 
 // ===== Boot =====
 document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('asst-input');
-  if (input) {
-    input.addEventListener('keydown', e => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        handleAssistantSubmit();
-      }
-    });
-    input.addEventListener('input', autoSizeInput);
-  }
-  document.getElementById('asst-send')?.addEventListener('click', handleAssistantSubmit);
+  document.getElementById('m-title')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); addTaskManual(); }
+  });
+  document.getElementById('ai-input')?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); submitActionInput(); }
+    if (e.key === 'Escape') closeActionInput();
+  });
   document.getElementById('asst-search')?.addEventListener('input', renderTasks);
   document.getElementById('asst-sort')?.addEventListener('change', renderTasks);
   renderTasks();
