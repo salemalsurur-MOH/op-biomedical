@@ -142,7 +142,7 @@ function listen(slice, onFirst, onRemote) {
 // ---- bootstrap ----
 // Wait for app-v2.js to expose its hooks, then start listening.
 function boot() {
-  if (!window.appHooks) { setTimeout(boot, 50); return; }
+  if (!window.appHooks || !window.assistantHooks) { setTimeout(boot, 50); return; }
 
   setStatus('connecting', 'جاري الاتصال…');
 
@@ -204,15 +204,15 @@ function boot() {
 
   listen('tasks',
     items => {
-      const local = window.assistantHooks ? window.assistantHooks.getTasks() : [];
-      if (items === null) {
+      const local = window.assistantHooks.getTasks();
+      if (items === null || items.length === 0) {
         if (local.length > 0) needSeed.tasks = true;
       } else {
-        if (window.assistantHooks) window.assistantHooks.setTasks(items);
+        window.assistantHooks.setTasks(items);
       }
       onAnyFirst();
     },
-    items => { if (window.assistantHooks) window.assistantHooks.setTasks(items); }
+    items => window.assistantHooks.setTasks(items)
   );
 
   // Fallback: if Firebase never responds within 4s (offline / blocked),
